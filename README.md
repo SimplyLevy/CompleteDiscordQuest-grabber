@@ -1,4 +1,4 @@
-# Discord Quest Automation Utility (Grabber)
+# Discord Quest Automation Utility (Grabber) [PATCHED]
 
 ⚠ **Warning**: This project is for educational purposes only. Use at your own risk.
 
